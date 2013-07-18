@@ -39,7 +39,59 @@
 
 
 
+# Lets put our functions here
+
+function print_usage(){
+
+  echo "Usage: HLS-Stream-Creator.sh inputfile segmentlength"
+  exit
+
+}
+
+
+
 
 # The fun begins!
 
+
+# Get the input data
+
+# Basic Usage is going to be
+# cmd.sh inputfile segmentlength 
+
+INPUTFILE=$1
+SEGLENGTH=$2
+
+# Check we've got the arguments we need
+if [ "$INPUTFILE" == "" ] || [ "$SEGLENGTH" == "" ]
+then
+  print_usage
+fi
+
+
+
+# FFMpeg is a pre-requisite, so let check for it
+if hash ffmpeg 2> /dev/null
+then
+  # FFMpeg exists
+  echo "ffmpeg command found.... continuing"
+else
+  # FFMPeg doesn't exist, uh-oh!
+  echo "Error: FFmpeg doesn't appear to exist in your PATH. Please addresss and try again"
+  exit
+fi
+
+
+# Now we want to make sure out input file actually exists
+if ! [ -f "$INPUTFILE" ]
+then
+  echo "Error: You gave me an incorrect filename. Please re-run specifying something that actually exists!"
+  exit
+fi
+
+
+# OK, so from here, what we want to do is to split the file into appropriately sized chunks,
+# re-encoding each to H.264 with MP3 audio, all to go into an MPEG2TS container
+#
+# The protocol appears to support MP4 as well though, so we may well look at that later.
 

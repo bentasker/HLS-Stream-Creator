@@ -30,7 +30,23 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 Output
 -------
 
-As of version 1, the HLS resources will be output to the directory *output*.
+As of version 1, the HLS resources will be output to the directory *output*. These will consist of video segments encoded in H.264 with MP3 audio (should be AAC really, but I'd compiled *ffmpeg* without) and an m3u8 file in the format
+
+>#EXTM3U
+>#EXT-X-MEDIA-SEQUENCE:0
+>#EXT-X-VERSION:3
+>#EXT-X-TARGETDURATION:10
+>#EXTINF:10, no desc
+>example_001.ts
+>#EXTINF:10, no desc
+>example_002.ts
+>#EXTINF:10, no desc
+>example_003.ts
+>#EXTINF:5, no desc
+>example_004.ts
+>#EXT-X-ENDLIST
+
+
 
 
 

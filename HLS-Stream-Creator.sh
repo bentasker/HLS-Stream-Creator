@@ -170,7 +170,7 @@ DUR_M=$(echo "$DURATION" | cut -d ':' -f 2)
 DUR_X=$(echo "$DURATION" | cut -d ':' -f 3 | cut -d '.' -f 1)
 
 # Calculate the duration in seconds
-let "DURATION_S = ( DUR_H * 60 + DUR_M ) * 60 + DUR_X"
+DURATION_S=$(expr \( $DUR_H \* 60 + $DUR_M \) \* 60 + $DUR_X)
 
 
 # Check we've not got empty media

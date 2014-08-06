@@ -16,7 +16,7 @@ Usage
 Usage is incredibly simple
 
 ```
-./HLS-Stream-Creator.sh inputfile segmentlength(seconds)
+./HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
 ```
 
 So to split a video file called *example.avi* into segments of 10 seconds, we'd run

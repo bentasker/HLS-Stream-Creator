@@ -38,6 +38,7 @@
 ######################################################################################
 
 # Basic config
+OUTPUT_DIRECTORY='./output'
 
 # Change this if you want to specify a path to use a specific version of FFMPeg
 FFMPEG='ffmpeg'
@@ -59,7 +60,7 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh inputfile segmentlength(seconds)
+Usage: HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
 
 EOM
 
@@ -76,7 +77,7 @@ function create_m3u8(){
 
 # We'll add some more headers in a later version, basic support is all we need for now
 # The draft says we need CRLF so we'll use SED to ensure that happens
-cat << EOM | sed 's/$/\r/g' > output/$1.m3u8
+cat << EOM | sed 's/$/\r/g' > $OUTPUT_DIRECTORY/$1.m3u8
 #EXTM3U
 #EXT-X-TARGETDURATION:$2
 #EXT-X-MEDIA-SEQUENCE:0
@@ -91,7 +92,7 @@ EOM
 #
 function append_segment(){
 
-cat << EOM | sed 's/$/\r/g' >> output/$1.m3u8
+cat << EOM | sed 's/$/\r/g' >> $OUTPUT_DIRECTORY/$1.m3u8
 #EXTINF:$2
 $3
 EOM
@@ -105,7 +106,7 @@ EOM
 # Usage: close_m3u8 streamname
 #
 function close_m3u8(){
-cat << EOM | sed 's/$/\r/g' >> output/$1.m3u8
+cat << EOM | sed 's/$/\r/g' >> $OUTPUT_DIRECTORY/$1.m3u8
 #EXT-X-ENDLIST
 EOM
 }
@@ -121,7 +122,10 @@ EOM
 
 INPUTFILE=$1
 SEGLENGTH=$2
-
+if ! [ -z "$3" ]
+then
+  OUTPUT_DIRECTORY=$3
+fi
 
 # Check we've got the arguments we need
 if [ "$INPUTFILE" == "" ] || [ "$SEGLENGTH" == "" ]
@@ -159,7 +163,7 @@ fi
 #
 # Essentially we want to create the chunks by running
 #
-# ffmpeg -i "$INPUTFILE" -vcodec libx264 -acodec mp3 -ss "START_POINT" -t "$SEGLENGTH" -f mpegts output/"$INPUTFILE"_"$N".ts
+# ffmpeg -i "$INPUTFILE" -vcodec libx264 -acodec mp3 -ss "START_POINT" -t "$SEGLENGTH" -f mpegts $OUTPUT_DIRECTORY/"$INPUTFILE"_"$N".ts
 
 # First we need the duration of the video
 DURATION=$($FFMPEG -i "$INPUTFILE" 2>&1 | grep Duration | cut -f 4 -d ' ')
@@ -186,18 +190,22 @@ N='1'
 START_POS='0'
 let 'N_FILES = DURATION_S / SEGLENGTH + 1'
 
+# Check output directory exists otherwise create it
+if [ ! -w $OUTPUT_DIRECTORY ]
+then
+  echo "Creating $OUTPUT_DIRECTORY"
+  mkdir -p $OUTPUT_DIRECTORY
+fi
+
 # For now, INPUTFILENAME is going to == INPUTFILE
 # Later, we'll change so that INPUTFILE could be an absolute path, whilst INPUTFILENAME will just be the filename
 INPUTFILENAME=$INPUTFILE
-
 
 # Create the M3U8 file
 create_m3u8 "$INPUTFILENAME" "$SEGLENGTH"
 
 # Finally, lets build the output filename format
 OUT_NAME=$INPUTFILENAME"_%03d.ts"
-
-
 
 # Processing Starts
 
@@ -206,7 +214,7 @@ do
 
   OUTPUT=$( printf "$OUT_NAME" "$N" )
   echo "Creating $OUTPUT ($N/$N_FILES)..."
-  $FFMPEG -i "$INPUTFILE" -loglevel quiet -vcodec libx264 -acodec mp3 -ss "$START_POS" -t "$SEGLENGTH" -f mpegts output/"$OUTPUT"
+  $FFMPEG -i "$INPUTFILE" -loglevel quiet -vcodec libx264 -acodec mp3 -ss "$START_POS" -t "$SEGLENGTH" -f mpegts $OUTPUT_DIRECTORY/"$OUTPUT"
 
   let "N = N + 1"
   let "START_POS = START_POS + SEGLENGTH"
@@ -214,7 +222,7 @@ do
   # If we're on the last segment, the duration may be less than the seglenth, so we need to reflect this in the m3u8
   if ! [ "$START_POS" -lt "$DURATION_S" ]
   then
-    SEG_DURATION=$($FFMPEG -i output/"$OUTPUT" 2>&1 | grep Duration | cut -f 4 -d ' ')
+    SEG_DURATION=$($FFMPEG -i $OUTPUT_DIRECTORY/"$OUTPUT" 2>&1 | grep Duration | cut -f 4 -d ' ')
     # Now we need to break out the duration into a time we can use
     DUR_H=$(echo "$SEG_DURATION" | cut -d ':' -f 1)
     DUR_M=$(echo "$SEG_DURATION" | cut -d ':' -f 2)

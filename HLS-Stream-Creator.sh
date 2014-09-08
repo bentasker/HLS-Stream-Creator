@@ -197,9 +197,8 @@ then
   mkdir -p $OUTPUT_DIRECTORY
 fi
 
-# For now, INPUTFILENAME is going to == INPUTFILE
-# Later, we'll change so that INPUTFILE could be an absolute path, whilst INPUTFILENAME will just be the filename
-INPUTFILENAME=$INPUTFILE
+# Pulls file name from INPUTFILE which may be an absolute or relative path.
+INPUTFILENAME=${INPUTFILE##*/}
 
 # Create the M3U8 file
 create_m3u8 "$INPUTFILENAME" "$SEGLENGTH"

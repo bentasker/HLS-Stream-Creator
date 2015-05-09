@@ -136,7 +136,7 @@ fi
 
 
 # FFMpeg is a pre-requisite, so let check for it
-if hash ffmpeg 2> /dev/null
+if hash $FFMPEG 2> /dev/null
 then
   # FFMpeg exists
   echo "ffmpeg command found.... continuing"

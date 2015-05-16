@@ -38,10 +38,10 @@
 ######################################################################################
 
 # Basic config
-OUTPUT_DIRECTORY='./output'
+OUTPUT_DIRECTORY=${OUTPUT_DIRECTORY:-'./output'}
 
 # Change this if you want to specify a path to use a specific version of FFMPeg
-FFMPEG='ffmpeg'
+FFMPEG=${FFMPEG:-'ffmpeg'}
 
 # Lets put our functions here
 
@@ -120,8 +120,8 @@ EOM
 # Basic Usage is going to be
 # cmd.sh inputfile segmentlength 
 
-INPUTFILE=$1
-SEGLENGTH=$2
+INPUTFILE=${INPUTFILE:-$1}
+SEGLENGTH=${SEGLENGTH:-$2}
 if ! [ -z "$3" ]
 then
   OUTPUT_DIRECTORY=$3

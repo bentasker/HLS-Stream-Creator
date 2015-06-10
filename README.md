@@ -82,3 +82,7 @@ License
 HLS-Stream-Creator is licensed under the [BSD 3 Clause License](http://opensource.org/licenses/BSD-3-Clause) and is Copyright (C) 2013 [Ben Tasker](http://www.bentasker.co.uk)
 
 
+Issue Tracking
+----------------
+
+Although the Github issue tracker can be used, the bulk of project management (such as it is) happens in JIRA. See [projects.bentasker.co.uk](http://projects.bentasker.co.uk/jira_projects/browse/HLS.html) for a HTML mirror of the tracking.

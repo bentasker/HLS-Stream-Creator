@@ -30,24 +30,21 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 Output
 -------
 
-As of version 1, the HLS resources will be output to the directory *output*. These will consist of video segments encoded in H.264 with MP3 audio (should be AAC really, but I'd compiled *ffmpeg* without) and an m3u8 file in the format
+As of version 1, the HLS resources will be output to the directory *output*. These will consist of video segments encoded in H.264 with AAC audio and an m3u8 file in the format
 
 >\#EXTM3U  
 >\#EXT-X-MEDIA-SEQUENCE:0  
 >\#EXT-X-VERSION:3  
 >\#EXT-X-TARGETDURATION:10  
 >\#EXTINF:10, no desc  
->example_001.ts  
+>example_00001.ts  
 >\#EXTINF:10, no desc  
->example_002.ts  
+>example_00002.ts  
 >\#EXTINF:10, no desc  
->example_003.ts  
+>example_00003.ts  
 >\#EXTINF:5, no desc  
->example_004.ts  
+>example_00004.ts  
 >\#EXT-X-ENDLIST
-
-
-
 
 
 
@@ -61,6 +58,23 @@ FFMPEG='/path/to/different/ffmpeg'
 ```
 
 
+Additional Environment Variables
+-------------------------------
+
+There are few environment variables which can control the ffmpeg behaviour.
+
+* `VIDEO_CODEC` - The encoder which will be used by ffmpeg for video streams. Examples: _libx264_, _nvenc_
+* `AUDIO_CODEC` - Encoder for the audio streams. Examples: _aac_, _libfdk_acc_, _mp3_, _libfaac_
+* `NUMTHREADS` - A number which will be passed to the `-threads` argument of ffmpeg. Newer ffmpegs with modern libx264 encoders will use the optimal number of threads by default.
+* `FFMPEG_FLAGS` - Additional flags for ffmpeg. They will be passed without any modification.
+
+Example usage:
+
+```
+export VIDEO_CODEC="nvenc"
+export FFMPEG_FLAGS="-pix_fmt yuv420p -profile:v"
+./HLS-Stream-Creator.sh example.avi 10
+```
 
 License
 --------

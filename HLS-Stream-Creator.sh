@@ -73,7 +73,14 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
+Usage: HLS-Stream-Creator.sh -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
+
+	-i	Input file
+	-s	Segment length (seconds)
+	-o	Output directory (default: ./output)
+
+Deprecated Legacy usage:
+	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
 
 EOM
 
@@ -83,15 +90,34 @@ exit
 
 # Get the input data
 
-# Basic Usage is going to be
-# cmd.sh inputfile segmentlength 
+# This exists to maintain b/c
+LEGACY_ARGS=1
 
-INPUTFILE=${INPUTFILE:-$1}
-SEGLENGTH=${SEGLENGTH:-$2}
-if ! [ -z "$3" ]
+# If even one argument is supplied, switch off legacy argument style
+while getopts "i:o:s:" flag
+do
+
+        case "$flag" in
+                i) LEGACY_ARGS=0; INPUTFILE="$OPTARG";;
+                o) LEGACY_ARGS=0; OUTPUT_DIRECTORY="$OPTARG";;
+                s) LEGACY_ARGS=0; SEGLENGTH="$OPTARG";;
+        esac
+done
+
+
+if [ "$LEGACY_ARGS" == "1" ]
 then
-  OUTPUT_DIRECTORY=$3
+  # Old Basic Usage is 
+  # cmd.sh inputfile segmentlength 
+
+  INPUTFILE=${INPUTFILE:-$1}
+  SEGLENGTH=${SEGLENGTH:-$2}
+  if ! [ -z "$3" ]
+  then
+    OUTPUT_DIRECTORY=$3
+  fi
 fi
+
 
 # Check we've got the arguments we need
 if [ "$INPUTFILE" == "" ] || [ "$SEGLENGTH" == "" ]

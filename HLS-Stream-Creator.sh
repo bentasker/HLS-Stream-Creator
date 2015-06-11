@@ -96,11 +96,11 @@ LEGACY_ARGS=1
 # If even one argument is supplied, switch off legacy argument style
 while getopts "i:o:s:" flag
 do
-
+	LEGACY_ARGS=0
         case "$flag" in
-                i) LEGACY_ARGS=0; INPUTFILE="$OPTARG";;
-                o) LEGACY_ARGS=0; OUTPUT_DIRECTORY="$OPTARG";;
-                s) LEGACY_ARGS=0; SEGLENGTH="$OPTARG";;
+                i) INPUTFILE="$OPTARG";;
+                o) OUTPUT_DIRECTORY="$OPTARG";;
+                s) SEGLENGTH="$OPTARG";;
         esac
 done
 

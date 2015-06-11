@@ -157,6 +157,8 @@ INPUTFILENAME=${INPUTFILE##*/}
 # Finally, lets build the output filename format
 OUT_NAME=$INPUTFILENAME"_%05d.ts"
 
+echo "Generating HLS segments - this may take some time"
+
 # Processing Starts
 $FFMPEG -i "$INPUTFILE" \
   -loglevel error -y \

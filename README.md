@@ -16,7 +16,7 @@ Usage
 Usage is incredibly simple
 
 ```
-./HLS-Stream-Creator.sh -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
+./HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
 
 
 Deprecated Legacy usage:
@@ -28,6 +28,17 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 
 ```
 ./HLS-Stream-Creator.sh -i example.avi -s 10
+```
+
+**Arguments**
+
+```
+	-i [file]	Input file
+	-s [s]  	Segment length (seconds)
+	-o [directory]	Output directory (default: ./output)
+	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
+	-l	Input is a live stream
+
 ```
 
 

@@ -56,6 +56,9 @@ AUDIO_CODEC=${AUDIO_CODEC:-"libfdk_aac"}
 # Additional flags for ffmpeg
 FFMPEG_FLAGS=${FFMPEG_FLAGS:-""}
 
+# If the input is a live stream (i.e. linear video) this should be 1
+LIVE_STREAM=${LIVE_STREAM:-0}
+
 # Lets put our functions here
 
 
@@ -73,11 +76,13 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
+Usage: HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
 
 	-i	Input file
 	-s	Segment length (seconds)
 	-o	Output directory (default: ./output)
+	-l	Input is a live stream
+	-c	Number of segments to include in playlist (live streams only) - 0 is no limit
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -88,19 +93,26 @@ exit
 
 }
 
+# This is used internally, if the user wants to specify their own flags they should be
+# setting FFMPEG_FLAGS
+FFMPEG_ADDITIONAL=''
+LIVE_SEGMENT_COUNT=0
+
 # Get the input data
 
 # This exists to maintain b/c
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:" flag
+while getopts "i:o:s:c:l" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
                 i) INPUTFILE="$OPTARG";;
                 o) OUTPUT_DIRECTORY="$OPTARG";;
                 s) SEGLENGTH="$OPTARG";;
+		l) LIVE_STREAM=1;;
+		c) LIVE_SEGMENT_COUNT="$OPTARG";;
         esac
 done
 
@@ -138,6 +150,7 @@ fi
 
 
 # Now we want to make sure out input file actually exists
+# This will need tweaking in future if we want to allow a RTMP stream (for example) to be used as input
 if ! [ -f "$INPUTFILE" ]
 then
   echo "Error: You gave me an incorrect filename. Please re-run specifying something that actually exists!"
@@ -149,6 +162,16 @@ if [ ! -w $OUTPUT_DIRECTORY ]
 then
   echo "Creating $OUTPUT_DIRECTORY"
   mkdir -p $OUTPUT_DIRECTORY
+fi
+
+if [ "$LIVE_STREAM" == "1" ]
+then
+    FFMPEG_ADDITIONAL+="-segment_list_flags +live"
+
+    if [ "$LIVE_SEGMENT_COUNT" -gt 0 ]
+    then
+	FFMPEG_ADDITIONAL+=" -segment_list_size $LIVE_SEGMENT_COUNT"
+    fi
 fi
 
 # Pulls file name from INPUTFILE which may be an absolute or relative path.
@@ -170,5 +193,6 @@ $FFMPEG -i "$INPUTFILE" \
   -segment_list "$OUTPUT_DIRECTORY/$INPUTFILENAME.m3u8" \
   -segment_time "$SEGLENGTH" \
   -segment_format mpeg_ts \
+  $FFMPEG_ADDITIONAL \
   $FFMPEG_FLAGS \
   $OUTPUT_DIRECTORY/"$OUT_NAME" || exit 1

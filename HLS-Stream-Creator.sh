@@ -59,6 +59,10 @@ FFMPEG_FLAGS=${FFMPEG_FLAGS:-""}
 # If the input is a live stream (i.e. linear video) this should be 1
 LIVE_STREAM=${LIVE_STREAM:-0}
 
+# Video bitrates to use in output (comma seperated list if you want to create an adaptive stream.)
+# leave null to use the input bitrate
+OP_BITRATES=${OP_BITRATES:-''}
+
 # Lets put our functions here
 
 
@@ -76,13 +80,14 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
+Usage: HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
 	-i	Input file
 	-s	Segment length (seconds)
 	-o	Output directory (default: ./output)
 	-l	Input is a live stream
 	-c	Number of segments to include in playlist (live streams only) - 0 is no limit
+	-b	Output video Bitrates (comma seperated list for adaptive streams)
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -92,6 +97,36 @@ EOM
 exit
 
 }
+
+
+function createStream(){
+
+# For VoD and single bitrate streams the variables we need will exist in Global scope.
+# for live adaptive streams though, that won't be the case, so we need to take them as arguments
+# Some are global though, so we'll leave those as is
+
+playlist_name="$1"
+output_name="$2"
+
+$FFMPEG -i "$INPUTFILE" \
+    -loglevel error -y \
+    -vcodec "$VIDEO_CODEC" \
+    -acodec "$AUDIO_CODEC" \
+    -threads "$NUMTHREADS" \
+    -map 0 \
+    -flags \
+    -global_header \
+    -f segment \
+    -segment_list "$playlist_name" \
+    -segment_time "$SEGLENGTH" \
+    -segment_format mpeg_ts \
+    $FFMPEG_ADDITIONAL \
+    $FFMPEG_FLAGS \
+    $OUTPUT_DIRECTORY/"$output_name" 
+
+}
+
+
 
 # This is used internally, if the user wants to specify their own flags they should be
 # setting FFMPEG_FLAGS
@@ -104,7 +139,7 @@ LIVE_SEGMENT_COUNT=0
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:l" flag
+while getopts "i:o:s:c:b:l" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -113,6 +148,7 @@ do
                 s) SEGLENGTH="$OPTARG";;
 		l) LIVE_STREAM=1;;
 		c) LIVE_SEGMENT_COUNT="$OPTARG";;
+		b) OP_BITRATES="$OPTARG";;
         esac
 done
 
@@ -179,22 +215,13 @@ INPUTFILENAME=${INPUTFILE##*/}
 
 # Finally, lets build the output filename format
 OUT_NAME=$INPUTFILENAME"_%05d.ts"
+PLAYLIST_NAME="$OUTPUT_DIRECTORY/$INPUTFILENAME.m3u8"
 
 echo "Generating HLS segments - this may take some time"
 
 # Processing Starts
-$FFMPEG -i "$INPUTFILE" \
-  -loglevel error -y \
-  -vcodec "$VIDEO_CODEC" \
-  -acodec "$AUDIO_CODEC" \
-  -threads "$NUMTHREADS" \
-  -map 0 \
-  -flags \
-  -global_header \
-  -f segment \
-  -segment_list "$OUTPUT_DIRECTORY/$INPUTFILENAME.m3u8" \
-  -segment_time "$SEGLENGTH" \
-  -segment_format mpeg_ts \
-  $FFMPEG_ADDITIONAL \
-  $FFMPEG_FLAGS \
-  $OUTPUT_DIRECTORY/"$OUT_NAME" || exit 1
+
+createStream $PLAYLIST_NAME $OUT_NAME
+
+# Will deal with exit statuses shortly.
+#|| exit 1

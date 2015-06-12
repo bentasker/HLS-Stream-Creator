@@ -100,13 +100,13 @@ exit
 
 
 function createStream(){
-
 # For VoD and single bitrate streams the variables we need will exist in Global scope.
 # for live adaptive streams though, that won't be the case, so we need to take them as arguments
 # Some are global though, so we'll leave those as is
 
 playlist_name="$1"
 output_name="$2"
+bitrate="$3"
 
 $FFMPEG -i "$INPUTFILE" \
     -loglevel error -y \
@@ -120,9 +120,29 @@ $FFMPEG -i "$INPUTFILE" \
     -segment_list "$playlist_name" \
     -segment_time "$SEGLENGTH" \
     -segment_format mpeg_ts \
+    $bitrate \
     $FFMPEG_ADDITIONAL \
     $FFMPEG_FLAGS \
     $OUTPUT_DIRECTORY/"$output_name" 
+
+}
+
+
+function createVariantPlaylist(){
+playlist_name="$1"
+echo "#EXTM3U" > "$playlist_name"
+}
+
+
+function appendVariantPlaylistentry(){
+playlist_name=$1
+playlist_path=$2
+playlist_bw=$(( $3 * 1000 )) # bits not bytes :)
+
+cat << EOM >> "$playlist_name"
+#EXT-X-STREAM-INF:BANDWIDTH=$playlist_bw
+$playlist_path
+EOM
 
 }
 
@@ -210,18 +230,60 @@ then
     fi
 fi
 
+
 # Pulls file name from INPUTFILE which may be an absolute or relative path.
 INPUTFILENAME=${INPUTFILE##*/}
 
-# Finally, lets build the output filename format
-OUT_NAME=$INPUTFILENAME"_%05d.ts"
-PLAYLIST_NAME="$OUTPUT_DIRECTORY/$INPUTFILENAME.m3u8"
+# Will look at making this configurable later
+PLAYLIST_PREFIX=$INPUTFILENAME
 
-echo "Generating HLS segments - this may take some time"
 
-# Processing Starts
+# Set the bitrate
+if [ ! "$OP_BITRATES" == "" ]
+then
+      # Make the bitrate list easier to parse
+      OP_BITRATES=${OP_BITRATES//,/$'\n'}
 
-createStream $PLAYLIST_NAME $OUT_NAME
+      # Get the variant playlist created
+      createVariantPlaylist "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8"
+      for br in $OP_BITRATES
+      do
+	    appendVariantPlaylistentry "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8" "${PLAYLIST_PREFIX}_${br}.m3u8" "$br"
+      done
 
-# Will deal with exit statuses shortly.
-#|| exit 1
+      # Now for the longer running bit, transcode the video
+      for br in $OP_BITRATES
+      do
+	      BITRATE="-b:v ${br}k -bufsize ${br}k"
+
+	      # Finally, lets build the output filename format
+	      OUT_NAME="${INPUTFILENAME}_${br}_%05d.ts"
+	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"
+
+	      echo "Generating HLS segments for bitrate ${br}k - this may take some time"
+
+	      # Processing Starts
+
+	      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
+
+	      # Will deal with exit statuses shortly.
+	      #|| exit 1
+
+      done
+
+else
+
+  # No bitrate specified
+
+  # Finally, lets build the output filename format
+  OUT_NAME="${INPUTFILENAME}_%05d.ts"
+  PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.m3u8"
+
+  echo "Generating HLS segments - this may take some time"
+
+  # Processing Starts
+
+  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
+
+
+fi

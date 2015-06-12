@@ -291,7 +291,7 @@ then
 
 	      echo "Generating HLS segments for bitrate ${br}k - this may take some time"
 
-	      if [ "$NO_FORK" == "0" ] && [ ! "$LIVE_STREAM" == "1" ]
+	      if [ "$NO_FORK" == "0" ] || [ "$LIVE_STREAM" == "1" ]
 	      then
 		      # Processing Starts
 		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" &
@@ -306,7 +306,7 @@ then
 
       done
 
-      if [ "$NO_FORK" == "0" ] && [ ! "$LIVE_STREAM" == "1" ]
+      if [ "$NO_FORK" == "0" ] || [ "$LIVE_STREAM" == "1" ]
       then
 	    # Monitor the background tasks for completion
 	    echo "All transcoding processes started, awaiting completion"

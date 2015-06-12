@@ -63,6 +63,9 @@ LIVE_STREAM=${LIVE_STREAM:-0}
 # leave null to use the input bitrate
 OP_BITRATES=${OP_BITRATES:-''}
 
+# Determines whether the processing for adaptive streams should run sequentially or not
+NO_FORK=${NO_FORK:-0}
+
 # Lets put our functions here
 
 
@@ -80,7 +83,7 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
+Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
 	-i	Input file
 	-s	Segment length (seconds)
@@ -88,6 +91,7 @@ Usage: HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentle
 	-l	Input is a live stream
 	-c	Number of segments to include in playlist (live streams only) - 0 is no limit
 	-b	Output video Bitrates (comma seperated list for adaptive streams)
+	-f	Foreground encoding only (don't fork the encoding processes into the background - adaptive non-live streams only)
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -123,8 +127,7 @@ $FFMPEG -i "$INPUTFILE" \
     $bitrate \
     $FFMPEG_ADDITIONAL \
     $FFMPEG_FLAGS \
-    $OUTPUT_DIRECTORY/"$output_name" 
-
+    "$OUTPUT_DIRECTORY/$output_name"
 }
 
 
@@ -147,6 +150,28 @@ EOM
 }
 
 
+function awaitCompletion(){
+# Monitor the encoding pids for their completion status
+while [ ${#PIDS[@]} -ne 0 ]; do
+    # Calculate the length of the array
+    pid_length=$((${#PIDS[@]} - 1))
+
+    # Check each PID in the array
+    for i in `seq 0 $pid_length`
+    do
+	  # Test whether the pid is still active
+	  if ! kill -0 ${PIDS[$i]} 2> /dev/null
+	  then
+		echo "Encoding for bitrate ${BITRATE_PROCESSES[$i]}k completed"
+		unset BITRATE_PROCESSES[$i]
+		unset PIDS[$i]
+	  fi
+    done
+    PIDS=("${PIDS[@]}") # remove any nulls
+    sleep 1
+done
+}
+
 
 # This is used internally, if the user wants to specify their own flags they should be
 # setting FFMPEG_FLAGS
@@ -159,7 +184,7 @@ LIVE_SEGMENT_COUNT=0
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:l" flag
+while getopts "i:o:s:c:b:lf" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -169,6 +194,7 @@ do
 		l) LIVE_STREAM=1;;
 		c) LIVE_SEGMENT_COUNT="$OPTARG";;
 		b) OP_BITRATES="$OPTARG";;
+		f) NO_FORK=1;;
         esac
 done
 
@@ -244,6 +270,10 @@ then
       # Make the bitrate list easier to parse
       OP_BITRATES=${OP_BITRATES//,/$'\n'}
 
+      # Create an array to house the pids for backgrounded tasks
+      declare -a PIDS
+      declare -a BITRATE_PROCESSES
+
       # Get the variant playlist created
       createVariantPlaylist "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8"
       for br in $OP_BITRATES
@@ -255,21 +285,33 @@ then
       for br in $OP_BITRATES
       do
 	      BITRATE="-b:v ${br}k -bufsize ${br}k"
-
 	      # Finally, lets build the output filename format
 	      OUT_NAME="${INPUTFILENAME}_${br}_%05d.ts"
 	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"
 
 	      echo "Generating HLS segments for bitrate ${br}k - this may take some time"
 
-	      # Processing Starts
-
-	      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
-
+	      if [ "$NO_FORK" == "0" ] && [ ! "$LIVE_STREAM" == "1" ]
+	      then
+		      # Processing Starts
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" &
+		      PID=$!
+		      PIDS=(${PIDS[@]} $PID)
+		      BITRATE_PROCESSES=(${BITRATE_PROCESSES[@]} $br)
+	      else
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
+	      fi
 	      # Will deal with exit statuses shortly.
 	      #|| exit 1
 
       done
+
+      if [ "$NO_FORK" == "0" ] && [ ! "$LIVE_STREAM" == "1" ]
+      then
+	    # Monitor the background tasks for completion
+	    echo "All transcoding processes started, awaiting completion"
+	    awaitCompletion
+      fi
 
 else
 

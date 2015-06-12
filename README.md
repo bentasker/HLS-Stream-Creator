@@ -16,7 +16,7 @@ Usage
 Usage is incredibly simple
 
 ```
-./HLS-Stream-Creator.sh -[l] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir]
+./HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
 
 Deprecated Legacy usage:
@@ -33,14 +33,39 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 **Arguments**
 
 ```
+    Mandatory Arguments:
+
 	-i [file]	Input file
 	-s [s]  	Segment length (seconds)
+
+    Optional Arguments:
+
 	-o [directory]	Output directory (default: ./output)
 	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
-	-l	Input is a live stream
-
+	-b [bitrates]	Output video Bitrates in kb/s (comma seperated list for adaptive streams)
+	-l		Input is a live stream
+	-f		Foreground encoding only (adaptive non-live streams only)
 ```
 
+
+Adaptive Streams
+------------------
+
+As of [HLS-6](http://projects.bentasker.co.uk/jira_projects/browse/HLS-6.html) the script can now generate adaptive streams with a top-level variant playlist for both VoD and Linear input streams.
+
+In order to create seperate bitrate streams, pass a comma seperated list in with the *-b* option
+
+```
+./HLS-Stream-Creator.sh -i example.avi -s 10 -b 28,64,128,256
+```
+
+By default, transcoding for each bitrate will be forked into the background - if you wish to process the bitrates sequentially, pass the *-f* option
+
+```
+./HLS-Stream-Creator.sh -i example.avi -s 10 -b 28,64,128,256 -f
+```
+
+In either case, in accordance with the HLS spec, the audio bitrate will remain unchanged
 
 
 Output

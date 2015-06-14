@@ -230,15 +230,6 @@ else
   exit 1
 fi
 
-
-# Now we want to make sure out input file actually exists
-# This will need tweaking in future if we want to allow a RTMP stream (for example) to be used as input
-if ! [ -f "$INPUTFILE" ]
-then
-  echo "Error: You gave me an incorrect filename. Please re-run specifying something that actually exists!"
-  exit 1
-fi
-
 # Check output directory exists otherwise create it
 if [ ! -w $OUTPUT_DIRECTORY ]
 then

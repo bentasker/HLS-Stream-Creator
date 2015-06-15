@@ -93,6 +93,7 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-b	Output video Bitrates (comma seperated list for adaptive streams)
 	-f	Foreground encoding only (don't fork the encoding processes into the background - adaptive non-live streams only)
 	-p	Playlist filename
+	-t	Segment filename prefix
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -185,7 +186,7 @@ LIVE_SEGMENT_COUNT=0
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:lf" flag
+while getopts "i:o:s:c:b:p:t:lf" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -197,6 +198,7 @@ do
 		b) OP_BITRATES="$OPTARG";;
 		f) NO_FORK=1;;
 		p) PLAYLIST_PREFIX="$OPTARG";;
+		t) SEGMENT_PREFIX="$OPTARG";;
         esac
 done
 
@@ -255,7 +257,7 @@ INPUTFILENAME=${INPUTFILE##*/}
 
 # If a prefix hasn't been specified, use the input filename
 PLAYLIST_PREFIX=${PLAYLIST_PREFIX:-$INPUTFILENAME}
-
+SEGMENT_PREFIX=${SEGMENT_PREFIX:-$PLAYLIST_PREFIX}
 
 # Set the bitrate
 if [ ! "$OP_BITRATES" == "" ]
@@ -279,7 +281,7 @@ then
       do
 	      BITRATE="-b:v ${br}k -bufsize ${br}k"
 	      # Finally, lets build the output filename format
-	      OUT_NAME="${INPUTFILENAME}_${br}_%05d.ts"
+	      OUT_NAME="${SEGMENT_PREFIX}_${br}_%05d.ts"
 	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"
 
 	      echo "Generating HLS segments for bitrate ${br}k - this may take some time"
@@ -311,7 +313,7 @@ else
   # No bitrate specified
 
   # Finally, lets build the output filename format
-  OUT_NAME="${INPUTFILENAME}_%05d.ts"
+  OUT_NAME="${SEGMENT_PREFIX}_%05d.ts"
   PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.m3u8"
 
   echo "Generating HLS segments - this may take some time"

@@ -83,7 +83,7 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
+Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
 
 	-i	Input file
 	-s	Segment length (seconds)
@@ -92,6 +92,7 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-c	Number of segments to include in playlist (live streams only) - 0 is no limit
 	-b	Output video Bitrates (comma seperated list for adaptive streams)
 	-f	Foreground encoding only (don't fork the encoding processes into the background - adaptive non-live streams only)
+	-p	Playlist filename
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -184,7 +185,7 @@ LIVE_SEGMENT_COUNT=0
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:lf" flag
+while getopts "i:o:s:c:b:p:lf" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -195,6 +196,7 @@ do
 		c) LIVE_SEGMENT_COUNT="$OPTARG";;
 		b) OP_BITRATES="$OPTARG";;
 		f) NO_FORK=1;;
+		p) PLAYLIST_PREFIX="$OPTARG";;
         esac
 done
 
@@ -251,8 +253,8 @@ fi
 # Pulls file name from INPUTFILE which may be an absolute or relative path.
 INPUTFILENAME=${INPUTFILE##*/}
 
-# Will look at making this configurable later
-PLAYLIST_PREFIX=$INPUTFILENAME
+# If a prefix hasn't been specified, use the input filename
+PLAYLIST_PREFIX=${PLAYLIST_PREFIX:-$INPUTFILENAME}
 
 
 # Set the bitrate

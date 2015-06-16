@@ -113,8 +113,9 @@ function createStream(){
 playlist_name="$1"
 output_name="$2"
 bitrate="$3"
+infile="$4"
 
-$FFMPEG -i "$INPUTFILE" \
+$FFMPEG -i "$infile" \
     -loglevel error -y \
     -vcodec "$VIDEO_CODEC" \
     -acodec "$AUDIO_CODEC" \
@@ -179,7 +180,9 @@ done
 # setting FFMPEG_FLAGS
 FFMPEG_ADDITIONAL=''
 LIVE_SEGMENT_COUNT=0
-
+IS_FIFO=0
+TMPDIR=${TMPDIR:-"/tmp"}
+MYPID=$$
 # Get the input data
 
 # This exists to maintain b/c
@@ -234,6 +237,14 @@ else
   exit 1
 fi
 
+# Check whether the input is a named pipe
+if [ -p "$INPUTFILE" ]
+then
+  echo "Warning: Input is FIFO - EXPERIMENTAL"
+  IS_FIFO=1
+
+fi
+
 # Check output directory exists otherwise create it
 if [ ! -w $OUTPUT_DIRECTORY ]
 then
@@ -283,29 +294,52 @@ then
 	      # Finally, lets build the output filename format
 	      OUT_NAME="${SEGMENT_PREFIX}_${br}_%05d.ts"
 	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"
-
+	      SOURCE_FILE="$INPUTFILE"
 	      echo "Generating HLS segments for bitrate ${br}k - this may take some time"
 
 	      if [ "$NO_FORK" == "0" ] || [ "$LIVE_STREAM" == "1" ]
 	      then
 		      # Processing Starts
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" &
+		      if [ "$IS_FIFO" == "1" ]
+		      then
+			    # Create a FIFO specially for this bitrate
+			    SOURCE_FILE="$TMPDIR/hlsc.encode.$MYPID.$br"
+			    mknod "$SOURCE_FILE" p
+		      fi
+
+		      # Schedule the encode
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" &
 		      PID=$!
 		      PIDS=(${PIDS[@]} $PID)
 		      BITRATE_PROCESSES=(${BITRATE_PROCESSES[@]} $br)
 	      else
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE"
 	      fi
-	      # Will deal with exit statuses shortly.
-	      #|| exit 1
 
       done
+
+      if [ "$IS_FIFO" == "1" ]
+      then
+	      # If the input was a FIFO we need to read from it and push into the new FIFOs
+	      cat "$INPUTFILE" | tee $(for br in $OP_BITRATES; do echo "$TMPDIR/hlsc.encode.$MYPID.$br"; done) > /dev/null &
+	      TEE_PID=$!
+      fi
 
       if [ "$NO_FORK" == "0" ] || [ "$LIVE_STREAM" == "1" ]
       then
 	    # Monitor the background tasks for completion
 	    echo "All transcoding processes started, awaiting completion"
 	    awaitCompletion
+      fi
+
+      if [ "$IS_FIFO" == "1" ]
+      then
+	    for br in $OP_BITRATES
+	    do 
+		rm -f "$TMPDIR/hlsc.encode.$MYPID.$br"; 
+	    done
+	    # If we were interrupted, tee may still be running
+	    kill $TEE_PID 2> /dev/null 
       fi
 
 else
@@ -320,7 +354,7 @@ else
 
   # Processing Starts
 
-  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE"
+  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE"
 
 
 fi

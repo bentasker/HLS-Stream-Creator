@@ -167,6 +167,13 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  if ! kill -0 ${PIDS[$i]} 2> /dev/null
 	  then
 		echo "Encoding for bitrate ${BITRATE_PROCESSES[$i]}k completed"
+
+		if [ "$LIVE_STREAM" == "1" ]
+		then
+		    # Correctly terminate the manifest. See HLS-15 for info on why
+		    echo "#EXT-X-ENDLIST" >> "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8"
+		fi
+
 		unset BITRATE_PROCESSES[$i]
 		unset PIDS[$i]
 	  fi

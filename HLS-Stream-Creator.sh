@@ -94,6 +94,7 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-f	Foreground encoding only (don't fork the encoding processes into the background - adaptive non-live streams only)
 	-p	Playlist filename
 	-t	Segment filename prefix
+	-S	Segment directory name (default none)
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -189,7 +190,7 @@ MYPID=$$
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:t:lf" flag
+while getopts "i:o:s:c:b:p:t:S:lf" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -202,6 +203,7 @@ do
 		f) NO_FORK=1;;
 		p) PLAYLIST_PREFIX="$OPTARG";;
 		t) SEGMENT_PREFIX="$OPTARG";;
+		S) SEGMENT_DIRECTORY="$OPTARG";;
         esac
 done
 
@@ -270,6 +272,20 @@ INPUTFILENAME=${INPUTFILE##*/}
 PLAYLIST_PREFIX=${PLAYLIST_PREFIX:-$INPUTFILENAME}
 SEGMENT_PREFIX=${SEGMENT_PREFIX:-$PLAYLIST_PREFIX}
 
+# The 'S' option allows segments and bitrate specific manifests to be placed in a subdir
+SEGMENT_DIRECTORY=${SEGMENT_DIRECTORY:-''}
+
+if [ ! "$SEGMENT_DIRECTORY" == "" ]
+then
+
+	if [ ! -d "${OUTPUT_DIRECTORY}/${SEGMENT_DIRECTORY}" ]
+	then
+		mkdir "${OUTPUT_DIRECTORY}/${SEGMENT_DIRECTORY}"
+	fi
+
+	SEGMENT_DIRECTORY+="/"
+fi
+
 # Set the bitrate
 if [ ! "$OP_BITRATES" == "" ]
 then
@@ -284,8 +300,10 @@ then
       createVariantPlaylist "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8"
       for br in $OP_BITRATES
       do
-	    appendVariantPlaylistentry "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8" "${PLAYLIST_PREFIX}_${br}.m3u8" "$br"
+	    appendVariantPlaylistentry "$OUTPUT_DIRECTORY/${SEGMENT_DIRECTORY}${PLAYLIST_PREFIX}_master.m3u8" "${PLAYLIST_PREFIX}_${br}.m3u8" "$br"
       done
+
+      OUTPUT_DIRECTORY+=$SEGMENT_DIRECTORY
 
       # Now for the longer running bit, transcode the video
       for br in $OP_BITRATES
@@ -344,6 +362,7 @@ then
 
 else
 
+  OUTPUT_DIRECTORY+=$SEGMENT_DIRECTORY
   # No bitrate specified
 
   # Finally, lets build the output filename format

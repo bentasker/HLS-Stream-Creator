@@ -47,6 +47,7 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 	-t [name]	Segment filename prefix
 	-l		Input is a live stream
 	-f		Foreground encoding only (adaptive non-live streams only)
+	-S		Name of a subdirectory to put segments into
 ```
 
 

@@ -267,7 +267,8 @@ then
 
     if [ "$LIVE_SEGMENT_COUNT" -gt 0 ]
     then
-	FFMPEG_ADDITIONAL+=" -segment_list_size $LIVE_SEGMENT_COUNT"
+	WRAP_POINT=$(($LIVE_SEGMENT_COUNT * 2)) # Wrap the segment numbering after 2 manifest lengths - prevents disks from filling
+	FFMPEG_ADDITIONAL+=" -segment_list_size $LIVE_SEGMENT_COUNT -segment_wrap $WRAP_POINT"
     fi
 fi
 

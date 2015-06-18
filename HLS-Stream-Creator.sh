@@ -315,7 +315,7 @@ then
       # Now for the longer running bit, transcode the video
       for br in $OP_BITRATES
       do
-	      BITRATE="-b:v ${br}k -bufsize ${br}k"
+	      BITRATE="-b:v ${br}k"
 	      # Finally, lets build the output filename format
 	      OUT_NAME="${SEGMENT_PREFIX}_${br}_%05d.ts"
 	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"

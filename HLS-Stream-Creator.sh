@@ -168,7 +168,7 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  then
 		echo "Encoding for bitrate ${BITRATE_PROCESSES[$i]}k completed"
 
-		if [ "$LIVE_STREAM" == "1" ] && [ `grep 'EXT-X-ENDLIST' "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8 | wc -l " == "0" ]
+		if [ "$LIVE_STREAM" == "1" ] && [ `grep 'EXT-X-ENDLIST' "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8" | wc -l ` == "0" ]
 		then
 		    # Correctly terminate the manifest. See HLS-15 for info on why
 		    echo "#EXT-X-ENDLIST" >> "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8"

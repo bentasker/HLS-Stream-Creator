@@ -411,7 +411,7 @@ else
   createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE"
 
 
-  if [ "$ENCRYPT" == "1" ]
+  if [ "$ENCRYPT" == "1" ] && [ "$LIVE_STREAM" == "0" ]
   then
     encrypt
   fi

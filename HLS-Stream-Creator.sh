@@ -95,6 +95,7 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-p	Playlist filename
 	-t	Segment filename prefix
 	-S	Segment directory name (default none)
+	-e	Encrypt the HLS segments (default none)
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -183,6 +184,31 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 done
 }
 
+function encrypt(){
+# Encrypt the generated segments with AES-128 bits
+
+    KEY_FILE="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.key"
+
+    openssl rand 16 > $KEY_FILE
+    ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
+
+    count=0
+    for file in $(ls ${OUTPUT_DIRECTORY}/*.ts | cut -f3 -d '/')
+    do
+        ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${count}".ts
+
+	INIT_VECTOR=$(printf '%032x' $count)
+	openssl aes-128-cbc -e -in $OUTPUT_DIRECTORY/$file -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
+
+        # Move encrypted file to the original filename, so that the m3u8 file does not have to be changed
+        mv $ENC_FILENAME ${OUTPUT_DIRECTORY}/$file
+
+        count=$((count+1))
+    done
+
+    # Insert the KEY at the 5'th line in the m3u8 file
+    sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${PLAYLIST_PREFIX}.key "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.m3u8"
+}
 
 # This is used internally, if the user wants to specify their own flags they should be
 # setting FFMPEG_FLAGS
@@ -197,7 +223,7 @@ MYPID=$$
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:t:S:lf" flag
+while getopts "i:o:s:c:b:p:t:S:lfe" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -211,6 +237,7 @@ do
 		p) PLAYLIST_PREFIX="$OPTARG";;
 		t) SEGMENT_PREFIX="$OPTARG";;
 		S) SEGMENT_DIRECTORY="$OPTARG";;
+		e) ENCRYPT=1;;
         esac
 done
 
@@ -384,4 +411,8 @@ else
   createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE"
 
 
+  if [ "$ENCRYPT" == "1" ]
+  then
+    encrypt
+  fi
 fi

@@ -326,6 +326,7 @@ if [ ! "$OP_BITRATES" == "" ]
 then
       # Make the bitrate list easier to parse
       OP_BITRATES=${OP_BITRATES//,/$'\n'}
+      OP_BITRATES=$(echo "${OP_BITRATES}" | tac) # Reverse the order as a temporary workaround for #9/HLS-10
 
       # Create an array to house the pids for backgrounded tasks
       declare -a PIDS

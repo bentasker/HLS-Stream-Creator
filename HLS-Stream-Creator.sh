@@ -180,6 +180,7 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  fi
     done
     PIDS=("${PIDS[@]}") # remove any nulls
+    BITRATE_PROCESSES=("${BITRATE_PROCESSES[@]}") # remove any nulls
     sleep 1
 done
 }

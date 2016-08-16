@@ -96,6 +96,9 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-t	Segment filename prefix
 	-S	Segment directory name (default none)
 	-e	Encrypt the HLS segments (default none)
+	-2	2-pass encoding
+	-q	Quality (changes to CRF)
+	-C	Constant Bit Rate (CBR as opposed to AVB)
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -117,8 +120,26 @@ output_name="$2"
 bitrate="$3"
 infile="$4"
 
+local PASSVAR=
+if $TWOPASS; then
+	local LOGFILE="$OUTPUT_DIRECTORY/bitrate$br"
+	PASSVAR="-passlogfile \"$LOGFILE\" -pass 2"
+
+	$FFMPEG -i "$infile" \
+		-pass 1 \
+		-passlogfile "$LOGFILE" \
+		-an \
+		-vcodec libx264 \
+		-f mpegts \
+		$bitrate \
+		$FFMPEG_ADDITIONAL \
+		-loglevel error -y \
+		/dev/null
+fi
+
 $FFMPEG -i "$infile" \
-    -loglevel error -y \
+    $PASSVAR \
+    -loglevel verbose -y \
     -vcodec "$VIDEO_CODEC" \
     -acodec "$AUDIO_CODEC" \
     -threads "$NUMTHREADS" \
@@ -218,13 +239,16 @@ LIVE_SEGMENT_COUNT=0
 IS_FIFO=0
 TMPDIR=${TMPDIR:-"/tmp"}
 MYPID=$$
+TWOPASS=false
+QUALITY=
+CONSTANT=false
 # Get the input data
 
 # This exists to maintain b/c
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:t:S:lfe" flag
+while getopts "i:o:s:c:b:p:t:S:q:Clfe2" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -239,6 +263,9 @@ do
 		t) SEGMENT_PREFIX="$OPTARG";;
 		S) SEGMENT_DIRECTORY="$OPTARG";;
 		e) ENCRYPT=1;;
+		2) TWOPASS=true;;
+		q) QUALITY="$OPTARG";;
+		C) CONSTANT=true;;
         esac
 done
 
@@ -344,7 +371,19 @@ then
       # Now for the longer running bit, transcode the video
       for br in $OP_BITRATES
       do
-	      BITRATE="-b:v ${br}k"
+              if [ -z $QUALITY ]; then
+		if $CONSTANT; then
+	          BITRATE="-b:v ${br}k -bufsize ${br}k -minrate ${br}k -maxrate ${br}k"
+		else
+	          BITRATE="-b:v ${br}k"
+		fi
+	      else
+	        BITRATE="-crf $QUALITY -maxrate ${br}k -bufsize ${br}k"
+                if [ $VIDEO_CODEC = "libx265" ]; then
+                  BITRATE="$BITRATE -x265-params --vbv-maxrate ${br}k --vbv-bufsize ${br}k"
+                fi
+	      fi
+	      echo "Bitrate options: $BITRATE"
 	      # Finally, lets build the output filename format
 	      OUT_NAME="${SEGMENT_PREFIX}_${br}_%05d.ts"
 	      PLAYLIST_NAME="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${br}.m3u8"

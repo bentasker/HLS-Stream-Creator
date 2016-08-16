@@ -36,7 +36,7 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
     Mandatory Arguments:
 
 	-i [file]	Input file
-	-s [s]  	Segment length (seconds)
+	-s [s]		Segment length (seconds)
 
     Optional Arguments:
 
@@ -48,6 +48,9 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 	-l		Input is a live stream
 	-f		Foreground encoding only (adaptive non-live streams only)
 	-S		Name of a subdirectory to put segments into
+	-2		Use two-pass encoding
+	-q [quality]	Change encoding to CFR with [quality]
+	-C		Use constant bitrate as opposed to variable bitrate
 ```
 
 
@@ -100,6 +103,12 @@ There may be occasions where you don't want to use the *ffmpeg* that appears in 
 ```
 FFMPEG='/path/to/different/ffmpeg'
 ```
+
+
+H265 details
+------------
+
+Check has been added for libx265 to enforce bitrate limits for H265 since it uses additional parameters.
 
 
 Additional Environment Variables

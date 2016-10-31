@@ -51,7 +51,7 @@ NUMTHREADS=${NUMTHREADS:-"0"}
 VIDEO_CODEC=${VIDEO_CODEC:-"libx264"}
 
 # Audio codec for the output video. Will be used as an value for the -acodec argument
-AUDIO_CODEC=${AUDIO_CODEC:-"libfdk_aac"}
+AUDIO_CODEC=${AUDIO_CODEC:-"aac"}
 
 # Additional flags for ffmpeg
 FFMPEG_FLAGS=${FFMPEG_FLAGS:-""}

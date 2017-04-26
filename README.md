@@ -42,6 +42,7 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 
 	-o [directory]	Output directory (default: ./output)
 	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
+	-e      	Encrypt the HLS segments (a key will be generated automatically)
 	-b [bitrates]	Output video Bitrates in kb/s (comma seperated list for adaptive streams)
 	-p [name]	Playlist filename prefix
 	-t [name]	Segment filename prefix

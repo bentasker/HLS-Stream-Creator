@@ -223,15 +223,15 @@ function encrypt(){
     ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
 
     count=0
-    for file in $(ls ${OUTPUT_DIRECTORY}/*.ts | cut -f3 -d '/')
+    for file in ${OUTPUT_DIRECTORY}/*.ts
     do
         ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${count}".ts
 
 	INIT_VECTOR=$(printf '%032x' $count)
-	openssl aes-128-cbc -e -in $OUTPUT_DIRECTORY/$file -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
+	openssl aes-128-cbc -e -in $file -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
 
         # Move encrypted file to the original filename, so that the m3u8 file does not have to be changed
-        mv $ENC_FILENAME ${OUTPUT_DIRECTORY}/$file
+        mv $ENC_FILENAME $file
 
         count=$((count+1))
     done

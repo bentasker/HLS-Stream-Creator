@@ -209,6 +209,14 @@ done
 function encrypt(){
 # Encrypt the generated segments with AES-128 bits
 
+
+    # Only run the encryption routine if it's been enabled  (and not blocked)
+    if [ ! "$ENCRYPT" == "1" ] || [ "$LIVE_STREAM" == "1" ]
+    then
+        return
+    fi
+
+
     KEY_FILE="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.key"
 
     openssl rand 16 > $KEY_FILE
@@ -423,6 +431,9 @@ then
 	    # Monitor the background tasks for completion
 	    echo "All transcoding processes started, awaiting completion"
 	    awaitCompletion
+	    
+	    # As of HLS-20 encrypt will only run if the relevant vars are set
+	    encrypt
       fi
 
       if [ "$IS_FIFO" == "1" ]
@@ -450,9 +461,6 @@ else
 
   createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE"
 
-
-  if [ "$ENCRYPT" == "1" ] && [ "$LIVE_STREAM" == "0" ]
-  then
-    encrypt
-  fi
+  # As of HLS-20 encrypt will only run if the relevant vars are set
+  encrypt
 fi

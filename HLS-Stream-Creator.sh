@@ -236,8 +236,13 @@ function encrypt(){
         count=$((count+1))
     done
 
-    # Insert the KEY at the 5'th line in the m3u8 file
-    sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${PLAYLIST_PREFIX}.key "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.m3u8"
+    
+    # this isn't technically correct as we needn't write into the master, but should still work
+    for manifest in ${OUTPUT_DIRECTORY}/*.m3u8
+    do
+        # Insert the KEY at the 5'th line in the m3u8 file
+        sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${PLAYLIST_PREFIX}.key "$manifest"
+    done
 }
 
 # This is used internally, if the user wants to specify their own flags they should be

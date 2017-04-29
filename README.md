@@ -106,7 +106,7 @@ big_buck_bunny_720p_stereo.avi_1372_00000.ts
 Output
 -------
 
-As of version 1, the HLS resources will be output to the directory *output*. These will consist of video segments encoded in H.264 with AAC audio and an m3u8 file in the format
+As of version 1, the HLS resources will be output to the directory *output* (unless a different directory has been specified with *-o*). These will consist of video segments encoded in H.264 with AAC audio and an m3u8 file in the format
 
 >\#EXTM3U  
 >\#EXT-X-MEDIA-SEQUENCE:0  

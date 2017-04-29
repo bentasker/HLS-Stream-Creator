@@ -140,6 +140,35 @@ H265 details
 Check has been added for libx265 to enforce bitrate limits for H265 since it uses additional parameters.
 
 
+
+Audio Codec Availability
+--------------------------
+
+Because *libfdk_aac* is a non-free codec, and is not available in all builds, commit 0796feb switched the default audio codec to *aac*.
+
+However, in older versions of ffmpeg, aac was marked as experimental - this includes the packages currently in the repos for Ubuntu Xenial. As a result, when running the script, you may see the following error
+
+```
+The encoder 'aac' is experimental but experimental codecs are not enabled, add '-strict -2' if you want to use it.
+```
+
+There are two ways to work around this. If you have the libfdk_aac codec installed, you can specify that it should be used instead
+```
+export AUDIO_CODEC="libfdk_aac"
+```
+
+Alternatively, you can update the ffmpeg flags to enable experimental codecs
+```
+export FFMPEG_FLAGS='-strict -2'
+```
+
+And the re-run HLS-Stream-Creator.
+
+[HLS-23](http://projects.bentasker.co.uk/jira_projects/browse/HLS-23.html) will, in future, update the script to check for this automatically.
+
+
+
+
 Additional Environment Variables
 -------------------------------
 

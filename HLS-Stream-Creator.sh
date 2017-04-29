@@ -216,12 +216,13 @@ function encrypt(){
         return
     fi
 
-
+    echo "Generating Encryption Key"
     KEY_FILE="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.key"
 
     openssl rand 16 > $KEY_FILE
     ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
 
+    echo "Encrypting Segments"
     for file in ${OUTPUT_DIRECTORY}/*.ts
     do
         SEG_NO=$( echo "$file" | grep -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
@@ -240,7 +241,7 @@ function encrypt(){
         
     done
 
-    
+    echo "Updating Manifests"
     # this isn't technically correct as we needn't write into the master, but should still work
     for manifest in ${OUTPUT_DIRECTORY}/*.m3u8
     do

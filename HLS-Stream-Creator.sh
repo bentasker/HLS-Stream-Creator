@@ -223,9 +223,9 @@ function encrypt(){
     ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
 
     echo "Encrypting Segments"
-    for file in ${OUTPUT_DIRECTORY}/*.ts
+    for SEGMENT_FILE in ${OUTPUT_DIRECTORY}/*.ts
     do
-        SEG_NO=$( echo "$file" | grep -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
+        SEG_NO=$( echo "$SEGMENT_FILE" | grep -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
         ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${SEG_NO}".ts
 
         # Strip leading 0's so printf doesn't think it's octal
@@ -234,10 +234,10 @@ function encrypt(){
         
         # Convert the segment number to an IV. 
 	INIT_VECTOR=$(printf '%032x' $SEG_NO)
-	openssl aes-128-cbc -e -in $file -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
+	openssl aes-128-cbc -e -in $SEGMENT_FILE -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
 
         # Move encrypted file to the original filename, so that the m3u8 file does not have to be changed
-        mv $ENC_FILENAME $file
+        mv $ENC_FILENAME $SEGMENT_FILE
         
     done
 

@@ -75,6 +75,34 @@ By default, transcoding for each bitrate will be forked into the background - if
 In either case, in accordance with the HLS spec, the audio bitrate will remain unchanged
 
 
+
+Encrypted Streams
+-------------------
+
+HLS-Stream-Creator can also create encrypted HLS streams, it's enabled by passing *-e*
+
+```
+./HLS-Stream-Creator.sh -i example.avi -e -s 10 -b 28,64,128,256
+
+```
+
+The script will generate a 128 bit key and save it to a *.key* file in the same directory as the segments. Each segment will be AES-128 encrypted using an IV which corresponds to it's segment number (the [default behaviour](https://developer.apple.com/library/content/technotes/tn2288/_index.html#//apple_ref/doc/uid/DTS40012238-CH1-ENCRYPT) for HLS).
+
+The manifests will then be updated to include the necessary `EXT-X-KEY` tag:
+
+```
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-ALLOW-CACHE:YES
+#EXT-X-KEY:METHOD=AES-128,URI=big_buck_bunny_720p_stereo.avi.key
+#EXT-X-TARGETDURATION:17
+#EXTINF:10.500000,
+big_buck_bunny_720p_stereo.avi_1372_00000.ts
+```
+
+
+
 Output
 -------
 

@@ -222,18 +222,22 @@ function encrypt(){
     openssl rand 16 > $KEY_FILE
     ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
 
-    count=0
     for file in ${OUTPUT_DIRECTORY}/*.ts
     do
-        ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${count}".ts
+        SEG_NO=$( echo "$file" | grep -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
+        ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${SEG_NO}".ts
 
-	INIT_VECTOR=$(printf '%032x' $count)
+        # Strip leading 0's so printf doesn't think it's octal
+        #SEG_NO=${SEG_NO##+(0)} # Doesn't work for some reason - need to check shopt to look further into it
+        SEG_NO=$(echo $SEG_NO | sed 's/^0*//' )
+        
+        # Convert the segment number to an IV. 
+	INIT_VECTOR=$(printf '%032x' $SEG_NO)
 	openssl aes-128-cbc -e -in $file -out $ENC_FILENAME -nosalt -iv $INIT_VECTOR -K $ENCRYPTION_KEY
 
         # Move encrypted file to the original filename, so that the m3u8 file does not have to be changed
         mv $ENC_FILENAME $file
-
-        count=$((count+1))
+        
     done
 
     

@@ -365,6 +365,7 @@ then
 	fi
 
 	SEGMENT_DIRECTORY+="/"
+	OUTPUT_DIRECTORY+="/"
 fi
 
 # Set the bitrate

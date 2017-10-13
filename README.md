@@ -187,6 +187,18 @@ export FFMPEG_FLAGS="-pix_fmt yuv420p -profile:v"
 ./HLS-Stream-Creator.sh example.avi 10
 ```
 
+
+OS X Users
+------------
+
+Segment encryption won't work out of the box on OS X as it relies on arguments which the BSD `grep` and `sed` commands don't support. In order to use encryption on OS X you must first install their GNU counterparts
+
+```
+brew install gnu-sed --with-default-names
+brew install grep --with-default-names
+```
+
+
 License
 --------
 

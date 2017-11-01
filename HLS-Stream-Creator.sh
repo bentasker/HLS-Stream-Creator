@@ -66,6 +66,12 @@ OP_BITRATES=${OP_BITRATES:-''}
 # Determines whether the processing for adaptive streams should run sequentially or not
 NO_FORK=${NO_FORK:-0}
 
+# Path Prefix (Not incl. Key)
+PATH_PREFIX=${PATH_PREFIX:-''}
+
+# Key Path Prefix
+KEY_PREFIX=${KEY_PREFIX:-''}
+
 # Lets put our functions here
 
 
@@ -99,6 +105,9 @@ Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentl
 	-2	2-pass encoding
 	-q	Quality (changes to CRF)
 	-C	Constant Bit Rate (CBR as opposed to AVB)
+	-u	Path Prefix
+	-k	Key Prefix
+	-K	Key Name
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -170,7 +179,7 @@ playlist_bw=$(( $3 * 1000 )) # bits not bytes :)
 
 cat << EOM >> "$playlist_name"
 #EXT-X-STREAM-INF:BANDWIDTH=$playlist_bw
-$playlist_path
+$PATH_PREFIX$playlist_path
 EOM
 
 }
@@ -217,7 +226,7 @@ function encrypt(){
     fi
 
     echo "Generating Encryption Key"
-    KEY_FILE="$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}.key"
+    KEY_FILE="$OUTPUT_DIRECTORY/${KEY_NAME}.key"
 
     openssl rand 16 > $KEY_FILE
     ENCRYPTION_KEY=$(cat $KEY_FILE | hexdump -e '16/1 "%02x"')
@@ -246,7 +255,7 @@ function encrypt(){
     for manifest in ${OUTPUT_DIRECTORY}/*.m3u8
     do
         # Insert the KEY at the 5'th line in the m3u8 file
-        sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${PLAYLIST_PREFIX}.key "$manifest"
+        sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${KEY_PREFIX}${KEY_NAME}.key "$manifest"
     done
 }
 
@@ -266,7 +275,7 @@ CONSTANT=false
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:t:S:q:Clfe2" flag
+while getopts "i:o:s:c:b:p:t:S:q:u:k:K:Clfe2" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -284,6 +293,9 @@ do
 		2) TWOPASS=true;;
 		q) QUALITY="$OPTARG";;
 		C) CONSTANT=true;;
+		u) PATH_PREFIX="$OPTARG";;
+		k) KEY_PREFIX="$OPTARG";;
+		K) KEY_NAME="$OPTARG";;
         esac
 done
 
@@ -324,7 +336,17 @@ if [ -p "$INPUTFILE" ]
 then
   echo "Warning: Input is FIFO - EXPERIMENTAL"
   IS_FIFO=1
+fi
 
+# Make sure that the trailing slashes are added
+if [ "$PATH_PREFIX" != "" ] && [ "${PATH_PREFIX:$length:1}" != "/" ]
+then
+  PATH_PREFIX+="/"
+fi
+
+if [ "$KEY_PREFIX" != "" ] && [ "${KEY_PREFIX:$length:1}" != "/" ]
+then
+  KEY_PREFIX+="/"
 fi
 
 # Check output directory exists otherwise create it
@@ -352,6 +374,7 @@ INPUTFILENAME=${INPUTFILE##*/}
 # If a prefix hasn't been specified, use the input filename
 PLAYLIST_PREFIX=${PLAYLIST_PREFIX:-$INPUTFILENAME}
 SEGMENT_PREFIX=${SEGMENT_PREFIX:-$PLAYLIST_PREFIX}
+KEY_NAME=${KEY_NAME:-$PLAYLIST_PREFIX}
 
 # The 'S' option allows segments and bitrate specific manifests to be placed in a subdir
 SEGMENT_DIRECTORY=${SEGMENT_DIRECTORY:-''}

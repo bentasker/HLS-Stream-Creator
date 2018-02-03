@@ -129,6 +129,15 @@ output_name="$2"
 bitrate="$3"
 infile="$4"
 
+
+# Resolution comes from global $resolution
+#
+# See HLS-27
+#
+# I don't like this use of $resolution when it's not local, but there was already a use 
+# of non-local $br in here so I'll fix this later
+
+
 local PASSVAR=
 if $TWOPASS; then
 	local LOGFILE="$OUTPUT_DIRECTORY/bitrate$br"
@@ -141,11 +150,12 @@ if $TWOPASS; then
 		-vcodec libx264 \
 		-f mpegts \
 		$bitrate \
+		$resolution \
 		$FFMPEG_ADDITIONAL \
 		-loglevel error -y \
 		/dev/null
 fi
-
+echo "Using res $resolution aaaa"
 $FFMPEG -i "$infile" \
     $PASSVAR \
     -y \
@@ -159,6 +169,7 @@ $FFMPEG -i "$infile" \
     -segment_list "$playlist_name" \
     -segment_time "$SEGLENGTH" \
     -segment_format mpeg_ts \
+    $resolution \
     $bitrate \
     $FFMPEG_ADDITIONAL \
     $FFMPEG_FLAGS \
@@ -175,10 +186,19 @@ echo "#EXTM3U" > "$playlist_name"
 function appendVariantPlaylistentry(){
 playlist_name=$1
 playlist_path=$2
-playlist_bw=$(( $3 * 1000 )) # bits not bytes :)
+bw_statement=$3
+m3u8_resolution=''
+
+if [[ "$bw_statement" == *"-"* ]]
+then
+    m3u8_resolution=",RESOLUTION=$(echo "$bw_statement" | cut -d- -f2)"
+    bw_statement=$(echo "$bw_statement" | cut -d- -f1) 
+fi
+
+playlist_bw=$(( $bw_statement * 1000 )) # bits not bytes :)
 
 cat << EOM >> "$playlist_name"
-#EXT-X-STREAM-INF:BANDWIDTH=$playlist_bw
+#EXT-X-STREAM-INF:BANDWIDTH=$playlist_bw$m3u8_resolution
 $PATH_PREFIX$playlist_path
 EOM
 
@@ -413,6 +433,16 @@ then
       # Now for the longer running bit, transcode the video
       for br in $OP_BITRATES
       do
+      
+              # Check whether there's a resolution included in the bitrate string
+              #
+              # See HLS-27
+              if [[ "$br" == *"-"* ]]
+              then
+                resolution="-vf scale=$(echo "$br" | cut -d- -f2 | sed 's/x/:/')"
+                br=$(echo "$br" | cut -d- -f1) 
+              fi
+      
               if [ -z $QUALITY ]; then
 		if $CONSTANT; then
 	          BITRATE="-b:v ${br}k -bufsize ${br}k -minrate ${br}k -maxrate ${br}k"

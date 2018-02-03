@@ -139,7 +139,7 @@ fi
 
 $FFMPEG -i "$infile" \
     $PASSVAR \
-    -loglevel verbose -y \
+    -y \
     -vcodec "$VIDEO_CODEC" \
     -acodec "$AUDIO_CODEC" \
     -threads "$NUMTHREADS" \

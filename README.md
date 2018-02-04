@@ -72,7 +72,27 @@ By default, transcoding for each bitrate will be forked into the background - if
 ./HLS-Stream-Creator.sh -i example.avi -s 10 -b 28,64,128,256 -f
 ```
 
-In either case, in accordance with the HLS spec, the audio bitrate will remain unchanged
+In either case, in accordance with the HLS spec, the audio bitrate will remain unchanged.
+
+#### Multiple Resolutions
+
+As of [HLS-27](https://projects.bentasker.co.uk/jira_projects/browse/HLS-27.html) it is possible to (optionally) specify a resolution as well as the desired bitrate by appending it to the bitrate it applies to:
+
+```
+./HLS-Stream-Creator.sh -i example.avi -s 10 -b 128-600x400,256-1280x720,2000
+```
+
+In the example above, the first two bitrates will use their specified resolutions, whilst the last will use whatever resolution the source video uses.
+
+
+The format to use is
+```
+[bitrate]-[width]x[height]
+```
+
+Note: There are currently no checks to ensure the specified resolution isn't larger than the source media, so you'll need to check this yourself (for the time being).
+
+You should [consider the potential ramifications of player behaviour](https://projects.bentasker.co.uk/jira_projects/browse/HLS-27.html#comment2186312) before using this functionality.
 
 
 

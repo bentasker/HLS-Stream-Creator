@@ -425,7 +425,13 @@ then
       createVariantPlaylist "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8"
       for br in $OP_BITRATES
       do
-	    appendVariantPlaylistentry "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8" "${SEGMENT_DIRECTORY}${PLAYLIST_PREFIX}_${br}.m3u8" "$br"
+            bw=$br
+            if [[ "$br" == *"-"* ]]
+            then
+                bw=$(echo "$br" | cut -d- -f1) 
+            fi
+      
+	    appendVariantPlaylistentry "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_master.m3u8" "${SEGMENT_DIRECTORY}${PLAYLIST_PREFIX}_${bw}.m3u8" "$br"
       done
 
       OUTPUT_DIRECTORY+=$SEGMENT_DIRECTORY

@@ -155,7 +155,7 @@ if $TWOPASS; then
 		-loglevel error -y \
 		/dev/null
 fi
-echo "Using res $resolution aaaa"
+
 $FFMPEG -i "$infile" \
     $PASSVAR \
     -y \

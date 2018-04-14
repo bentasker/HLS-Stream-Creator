@@ -219,6 +219,15 @@ brew install grep --with-default-names
 ```
 
 
+Automation
+-----------
+
+HLS-Stream-Creator was originally created as a short bit of research and has since grown significantly. The consequence of this, is that it was primarily focused on being run manually.
+
+Although still not a perfect solution to automation, an example of [automating HLS-Stream-Creator can be found here](https://snippets.bentasker.co.uk/page-1804131128-Automating-HLS-Stream-Creator-Python.html). Better automation support will hopefully be added sometime in the future (pull requests very welcome).
+
+
+
 License
 --------
 

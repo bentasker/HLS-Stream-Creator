@@ -176,6 +176,7 @@ There are few environment variables which can control the ffmpeg behaviour.
 * `AUDIO_CODEC` - Encoder for the audio streams. Examples: _aac_, _libfdk_acc_, _mp3_, _libfaac_
 * `NUMTHREADS` - A number which will be passed to the `-threads` argument of ffmpeg. Newer ffmpegs with modern libx264 encoders will use the optimal number of threads by default.
 * `FFMPEG_FLAGS` - Additional flags for ffmpeg. They will be passed without any modification.
+* `FFMPEG_INPUT_FLAGS` - Additional flags for ffmpeg which apply to the input file only. They will also be passed without any modification.
 
 Example usage:
 

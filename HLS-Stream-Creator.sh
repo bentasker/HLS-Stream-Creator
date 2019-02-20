@@ -55,6 +55,7 @@ AUDIO_CODEC=${AUDIO_CODEC:-"aac"}
 
 # Additional flags for ffmpeg
 FFMPEG_FLAGS=${FFMPEG_FLAGS:-""}
+FFMPEG_INPUT_FLAGS=${FFMPEG_INPUT_FLAGS:-""}
 
 # If the input is a live stream (i.e. linear video) this should be 1
 LIVE_STREAM=${LIVE_STREAM:-0}
@@ -156,7 +157,8 @@ if $TWOPASS; then
 		/dev/null
 fi
 
-$FFMPEG -i "$infile" \
+$FFMPEG $FFMPEG_INPUT_FLAGS \
+    -i "$infile" \
     $PASSVAR \
     -y \
     -vcodec "$VIDEO_CODEC" \
@@ -280,7 +282,7 @@ function encrypt(){
 }
 
 # This is used internally, if the user wants to specify their own flags they should be
-# setting FFMPEG_FLAGS
+# setting FFMPEG_FLAGS or FFMPEG_INPUT_FLAGS
 FFMPEG_ADDITIONAL=''
 LIVE_SEGMENT_COUNT=0
 IS_FIFO=0

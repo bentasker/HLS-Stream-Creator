@@ -192,9 +192,10 @@ OS X Users
 
 Segment encryption won't work out of the box on OS X as it relies on arguments which the BSD `grep` and `sed` commands don't support. In order to use encryption on OS X you must first install their GNU counterparts
 
+    brew install gnu-sed
+    brew install grep
 
-    brew install gnu-sed --with-default-names
-    brew install grep --with-default-names
+Note: As of [HLS-33](https://projects.bentasker.co.uk/jira_projects/browse/HLS-33.html) it is no longer necessary to force `brew` to expose default names (since support has been dropped for `--with-default-names`).
 
 
 Automation

@@ -221,7 +221,7 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  then
 		echo "Encoding for bitrate ${BITRATE_PROCESSES[$i]}k completed"
 
-		if [ "$LIVE_STREAM" == "1" ] && [ `grep 'EXT-X-ENDLIST' "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8" | wc -l ` == "0" ]
+		if [ "$LIVE_STREAM" == "1" ] && [ `$GREP 'EXT-X-ENDLIST' "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8" | wc -l ` == "0" ]
 		then
 		    # Correctly terminate the manifest. See HLS-15 for info on why
 		    echo "#EXT-X-ENDLIST" >> "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8"
@@ -256,12 +256,12 @@ function encrypt(){
     echo "Encrypting Segments"
     for SEGMENT_FILE in ${OUTPUT_DIRECTORY}/*.ts
     do
-        SEG_NO=$( echo "$SEGMENT_FILE" | grep -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
+        SEG_NO=$( echo "$SEGMENT_FILE" | $GREP -o -P '_[0-9]+\.ts' | tr -dc '0-9' )
         ENC_FILENAME="$OUTPUT_DIRECTORY/${SEGMENT_PREFIX}_enc_${SEG_NO}".ts
 
         # Strip leading 0's so printf doesn't think it's octal
         #SEG_NO=${SEG_NO##+(0)} # Doesn't work for some reason - need to check shopt to look further into it
-        SEG_NO=$(echo $SEG_NO | sed 's/^0*//' )
+        SEG_NO=$(echo $SEG_NO | $SED 's/^0*//' )
         
         # Convert the segment number to an IV. 
 	INIT_VECTOR=$(printf '%032x' $SEG_NO)
@@ -277,7 +277,7 @@ function encrypt(){
     for manifest in ${OUTPUT_DIRECTORY}/*.m3u8
     do
         # Insert the KEY at the 5'th line in the m3u8 file
-        sed -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${KEY_PREFIX}${KEY_NAME}.key "$manifest"
+        $SED -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${KEY_PREFIX}${KEY_NAME}.key "$manifest"
     done
 }
 
@@ -390,6 +390,19 @@ then
 fi
 
 
+# HLS-33
+#
+# Handle Macs - it used to be possible to install gnu-sed and grep with default names using brew
+# but they've changed the way you do that and it seems more inconsistent in terms of result
+SED="sed"
+command -v gsed >/dev/null 2>&1 || { SED="gsed" }
+
+GREP="grep"
+command -v ggrep >/dev/null 2>&1 || { SED="ggrep" }
+
+
+
+
 # Pulls file name from INPUTFILE which may be an absolute or relative path.
 INPUTFILENAME=${INPUTFILE##*/}
 
@@ -447,7 +460,7 @@ then
               # See HLS-27
               if [[ "$br" == *"-"* ]]
               then
-                resolution="-vf scale=$(echo "$br" | cut -d- -f2 | sed 's/x/:/')"
+                resolution="-vf scale=$(echo "$br" | cut -d- -f2 | $SED 's/x/:/')"
                 br=$(echo "$br" | cut -d- -f1) 
               fi
       

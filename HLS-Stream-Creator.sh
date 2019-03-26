@@ -395,10 +395,10 @@ fi
 # Handle Macs - it used to be possible to install gnu-sed and grep with default names using brew
 # but they've changed the way you do that and it seems more inconsistent in terms of result
 SED="sed"
-command -v gsed >/dev/null 2>&1 || { SED="gsed" }
+command -v gsed >/dev/null 2>&1 && { SED="gsed"; }
 
 GREP="grep"
-command -v ggrep >/dev/null 2>&1 || { SED="ggrep" }
+command -v ggrep >/dev/null 2>&1 && { SED="ggrep"; }
 
 
 

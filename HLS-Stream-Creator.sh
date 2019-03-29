@@ -406,7 +406,7 @@ GREP="grep"
 command -v ggrep >/dev/null 2>&1
 if [ "$?" == "0" ]
 then
-    SED="ggrep"
+    GREP="ggrep"
 fi
 
 

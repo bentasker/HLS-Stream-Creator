@@ -197,6 +197,25 @@ Segment encryption won't work out of the box on OS X as it relies on arguments w
 
 Note: As of [HLS-33](https://projects.bentasker.co.uk/jira_projects/browse/HLS-33.html) it is no longer necessary to force `brew` to expose default names (since support has been dropped for `--with-default-names`).
 
+It should be possible to get HLS-Stream-Creator up and running on a Mac by running the following
+
+    # Install Xcode
+    xcode-select --install
+
+    # Install brew
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    brew install ffmpeg
+
+    # Needed for segment encryption
+    brew install openssl 
+    brew install gnu-sed 
+    brew install grep
+
+    # Clone the codebase
+    git clone git@github.com:bentasker/HLS-Stream-Creator.git
+
+
+
 
 Automation
 -----------

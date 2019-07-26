@@ -15,7 +15,7 @@ Usage
 
 Usage is incredibly simple
 
-    ./HLS-Stream-Creator.sh -[lfCe2] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
+    ./HLS-Stream-Creator.sh -[lfCe2n] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
     Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -49,6 +49,7 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 	-u [prefix]	Prefix to prepend to segment and manifest paths
 	-k [prefix]	String to prepend to Key path when encrpytion is used (e.g. https://mykeyserver.com/)
 	-K [Name]	Name of file for decryption key (will have .key appended)
+	-n              Ignore audio track in input file
 
 
 

@@ -90,7 +90,7 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[lfCe2] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
+Usage: HLS-Stream-Creator.sh -[lfCe2n] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
 
 	-i	Input file
 	-s	Segment length (seconds)
@@ -106,6 +106,7 @@ Usage: HLS-Stream-Creator.sh -[lfCe2] [-c segmentcount] -i [inputfile] -s [segme
 	-2	2-pass encoding
 	-q	Quality (changes to CRF)
 	-C	Constant Bit Rate (CBR as opposed to AVB)
+	-n      Ignore audio track in input
 	-u	Path Prefix
 	-k	Key Prefix
 	-K	Key Name
@@ -284,6 +285,7 @@ function encrypt(){
 # This is used internally, if the user wants to specify their own flags they should be
 # setting FFMPEG_FLAGS or FFMPEG_INPUT_FLAGS
 FFMPEG_ADDITIONAL=''
+IGNORE_AUDIO=false
 LIVE_SEGMENT_COUNT=0
 IS_FIFO=0
 TMPDIR=${TMPDIR:-"/tmp"}
@@ -297,7 +299,7 @@ CONSTANT=false
 LEGACY_ARGS=1
 
 # If even one argument is supplied, switch off legacy argument style
-while getopts "i:o:s:c:b:p:t:S:q:u:k:K:Clfe2" flag
+while getopts "i:o:s:c:b:p:t:S:q:u:k:K:Clfe2n" flag
 do
 	LEGACY_ARGS=0
         case "$flag" in
@@ -318,6 +320,7 @@ do
 		u) PATH_PREFIX="$OPTARG";;
 		k) KEY_PREFIX="$OPTARG";;
 		K) KEY_NAME="$OPTARG";;
+		n) IGNORE_AUDIO=1;;
         esac
 done
 
@@ -376,6 +379,12 @@ if [ ! -w $OUTPUT_DIRECTORY ]
 then
   echo "Creating $OUTPUT_DIRECTORY"
   mkdir -p $OUTPUT_DIRECTORY
+fi
+
+
+if [ "$IGNORE_AUDIO" == "1" ]
+then
+    FFMPEG_ADDITIONAL+="-an "
 fi
 
 if [ "$LIVE_STREAM" == "1" ]

@@ -90,7 +90,7 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[lf] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
+Usage: HLS-Stream-Creator.sh -[lfCe2] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
 
 	-i	Input file
 	-s	Segment length (seconds)

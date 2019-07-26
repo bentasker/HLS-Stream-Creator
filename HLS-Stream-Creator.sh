@@ -90,26 +90,35 @@ Released under BSD 3 Clause License
 See LICENSE
 
 
-Usage: HLS-Stream-Creator.sh -[lfCe2n] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]  [-p filename]
+Usage: HLS-Stream-Creator.sh -[CeflnS2] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
-	-i	Input file
-	-s	Segment length (seconds)
-	-o	Output directory (default: ./output)
-	-l	Input is a live stream
-	-c	Number of segments to include in playlist (live streams only) - 0 is no limit
-	-b	Output video Bitrates (comma seperated list for adaptive streams)
-	-f	Foreground encoding only (don't fork the encoding processes into the background - adaptive non-live streams only)
-	-p	Playlist filename
-	-t	Segment filename prefix
-	-S	Segment directory name (default none)
-	-e	Encrypt the HLS segments (default none)
-	-2	2-pass encoding
-	-q	Quality (changes to CRF)
-	-C	Constant Bit Rate (CBR as opposed to AVB)
-	-n      Ignore audio track in input
-	-u	Path Prefix
-	-k	Key Prefix
-	-K	Key Name
+
+    Mandatory Arguments:
+
+	-i [file]	Input file
+	-s [s]		Segment length (seconds)
+
+    Optional Arguments:
+
+	-b [bitrates]	Output video Bitrates in kb/s (comma seperated list for adaptive streams)
+	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
+	-k [prefix]	String to prepend to Key path when encrpytion is used (e.g. https://mykeyserver.com/)
+	-K [Name]	Name of file for decryption key (will have .key appended)
+	-o [directory]	Output directory (default: ./output)
+	-p [name]	Playlist filename prefix
+	-q [quality]	Change encoding to CFR with [quality]
+	-t [name]	Segment filename prefix
+	-u [prefix]	Prefix to prepend to segment and manifest paths
+	-C		Use constant bitrate as opposed to variable bitrate
+	-e      	Encrypt the HLS segments (a key will be generated automatically)
+	-f		Foreground encoding only (adaptive non-live streams only)
+	-h              Print this help
+	-l		Input is a live stream
+        -n              Ignore audio track in input file
+	-S		Name of a subdirectory to put segments into
+	-2		Use two-pass encoding
+
+
 
 Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']

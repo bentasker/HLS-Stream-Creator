@@ -15,7 +15,7 @@ Usage
 
 Usage is incredibly simple
 
-    ./HLS-Stream-Creator.sh -[lfCe2n] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
+    ./HLS-Stream-Creator.sh -[CeflnS2] [-c segmentcount] -i [inputfile] -s [segmentlength(seconds)] -o [outputdir] -b [bitrates]
 
     Deprecated Legacy usage:
 	HLS-Stream-Creator.sh inputfile segmentlength(seconds) [outputdir='./output']
@@ -34,22 +34,23 @@ So to split a video file called *example.avi* into segments of 10 seconds, we'd 
 
     Optional Arguments:
 
-	-o [directory]	Output directory (default: ./output)
-	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
-	-e      	Encrypt the HLS segments (a key will be generated automatically)
 	-b [bitrates]	Output video Bitrates in kb/s (comma seperated list for adaptive streams)
-	-p [name]	Playlist filename prefix
-	-t [name]	Segment filename prefix
-	-l		Input is a live stream
-	-f		Foreground encoding only (adaptive non-live streams only)
-	-S		Name of a subdirectory to put segments into
-	-2		Use two-pass encoding
-	-q [quality]	Change encoding to CFR with [quality]
-	-C		Use constant bitrate as opposed to variable bitrate
-	-u [prefix]	Prefix to prepend to segment and manifest paths
+	-c [count]	Number of segments to include in playlist (live streams only) - 0 is no limit
 	-k [prefix]	String to prepend to Key path when encrpytion is used (e.g. https://mykeyserver.com/)
 	-K [Name]	Name of file for decryption key (will have .key appended)
-	-n              Ignore audio track in input file
+	-o [directory]	Output directory (default: ./output)
+	-p [name]	Playlist filename prefix
+	-q [quality]	Change encoding to CFR with [quality]
+	-t [name]	Segment filename prefix
+	-u [prefix]	Prefix to prepend to segment and manifest paths
+	-C		Use constant bitrate as opposed to variable bitrate
+	-e      	Encrypt the HLS segments (a key will be generated automatically)
+	-f		Foreground encoding only (adaptive non-live streams only)
+	-h              Print Usage information
+	-l		Input is a live stream
+        -n              Ignore audio track in input file
+	-S		Name of a subdirectory to put segments into
+	-2		Use two-pass encoding
 
 
 

@@ -139,7 +139,7 @@ playlist_name="$1"
 output_name="$2"
 bitrate="$3"
 infile="$4"
-
+failfile="$5"
 
 # Resolution comes from global $resolution
 #
@@ -165,6 +165,14 @@ if $TWOPASS; then
 		$FFMPEG_ADDITIONAL \
 		-loglevel error -y \
 		/dev/null
+
+        ext=$?
+        if [ "$ext" != "0" ] && [ "$failfile"  != "" ]
+        then
+            echo $ext > $failfile
+        fi
+
+
 fi
 
 $FFMPEG $FFMPEG_INPUT_FLAGS \
@@ -186,6 +194,14 @@ $FFMPEG $FFMPEG_INPUT_FLAGS \
     $FFMPEG_ADDITIONAL \
     $FFMPEG_FLAGS \
     "$OUTPUT_DIRECTORY/$output_name"
+
+ext=$?
+if [ "$ext" != "0" ] && [ "$failfile"  != "" ]
+then
+    echo $ext > $failfile
+fi
+    
+    
 }
 
 
@@ -229,12 +245,31 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  # Test whether the pid is still active
 	  if ! kill -0 ${PIDS[$i]} 2> /dev/null
 	  then
+	  
+                if [ -f "$TMPDIR/bw-${BITRATE_PROCESSES[$i]}.failfile" ]
+                then
+                    echo "Error: FFMPEG process for bitrate exited ${BITRATE_PROCESSES[$i]} with status code `cat $TMPDIR/bw-${BITRATE_PROCESSES[$i]}.failfile`"
+                    echo "Killing other processes"
+                    for sub in `seq 0 $pid_length`
+                    do
+                        # We use pkill here because a simple kill will kill the shell process but leave ffmpeg active
+                        pkill -9 -P ${PIDS[$sub]} 2> /dev/null
+                    done
+                    
+                    rm -f "$TMPDIR/bw-*.failfile"
+                    exit 1
+                fi
+	  
 		echo "Encoding for bitrate ${BITRATE_PROCESSES[$i]}k completed"
 
 		if [ "$LIVE_STREAM" == "1" ] && [ `$GREP 'EXT-X-ENDLIST' "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8" | wc -l ` == "0" ]
 		then
 		    # Correctly terminate the manifest. See HLS-15 for info on why
 		    echo "#EXT-X-ENDLIST" >> "$OUTPUT_DIRECTORY/${PLAYLIST_PREFIX}_${BITRATE_PROCESSES[$i]}.m3u8"
+		    if [ "$?" != "0" ]
+		    then
+                        echo "Unable to terminate the manifest for bitrate ${BITRATE_PROCESSES[$i]}"
+		    fi
 		fi
 
 		unset BITRATE_PROCESSES[$i]
@@ -520,12 +555,18 @@ then
 		      fi
 
 		      # Schedule the encode
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" &
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$br.failfile" &
 		      PID=$!
 		      PIDS=(${PIDS[@]} $PID)
 		      BITRATE_PROCESSES=(${BITRATE_PROCESSES[@]} $br)
 	      else
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE"
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$BITRATE.failfile"
+		      if [ -f "$TMPDIR/bw-$BITRATE.failfile" ]
+		      then
+                        echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.failfile`"
+                        rm -f "$TMPDIR/bw-$BITRATE.failfile"
+                        exit 1
+		      fi
 	      fi
 
       done
@@ -570,7 +611,13 @@ else
 
   # Processing Starts
 
-  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE"
+  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE" "$TMPDIR/bw-$BITRATE.failfile"
+  if [ -f "$TMPDIR/bw-$BITRATE.failfile" ]
+  then
+    echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.failfile`"
+    rm -f "$TMPDIR/bw-$BITRATE.failfile"
+    exit 1
+  fi  
 
   # As of HLS-20 encrypt will only run if the relevant vars are set
   encrypt

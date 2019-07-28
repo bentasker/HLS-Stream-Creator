@@ -246,9 +246,9 @@ while [ ${#PIDS[@]} -ne 0 ]; do
 	  if ! kill -0 ${PIDS[$i]} 2> /dev/null
 	  then
 	  
-                if [ -f "$TMPDIR/bw-${BITRATE_PROCESSES[$i]}.failfile" ]
+                if [ -f "$TMPDIR/bw-${BITRATE_PROCESSES[$i]}.$MYPID.failfile" ]
                 then
-                    echo "Error: FFMPEG process for bitrate exited ${BITRATE_PROCESSES[$i]} with status code `cat $TMPDIR/bw-${BITRATE_PROCESSES[$i]}.failfile`"
+                    echo "Error: FFMPEG process for bitrate exited ${BITRATE_PROCESSES[$i]} with status code `cat $TMPDIR/bw-${BITRATE_PROCESSES[$i]}.$MYPID.failfile`"
                     echo "Killing other processes"
                     for sub in `seq 0 $pid_length`
                     do
@@ -256,7 +256,7 @@ while [ ${#PIDS[@]} -ne 0 ]; do
                         pkill -9 -P ${PIDS[$sub]} 2> /dev/null
                     done
                     
-                    rm -f "$TMPDIR/bw-*.failfile"
+                    rm -f "$TMPDIR/bw-*.$MYPID.failfile"
                     exit 1
                 fi
 	  
@@ -328,6 +328,7 @@ function encrypt(){
 
 # This is used internally, if the user wants to specify their own flags they should be
 # setting FFMPEG_FLAGS or FFMPEG_INPUT_FLAGS
+MYPID=$$
 FFMPEG_ADDITIONAL=''
 IGNORE_AUDIO=false
 LIVE_SEGMENT_COUNT=0
@@ -555,16 +556,16 @@ then
 		      fi
 
 		      # Schedule the encode
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$br.failfile" &
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$br.$MYPID.failfile" &
 		      PID=$!
 		      PIDS=(${PIDS[@]} $PID)
 		      BITRATE_PROCESSES=(${BITRATE_PROCESSES[@]} $br)
 	      else
-		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$BITRATE.failfile"
-		      if [ -f "$TMPDIR/bw-$BITRATE.failfile" ]
+		      createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$SOURCE_FILE" "$TMPDIR/bw-$BITRATE.$MYPID.failfile"
+		      if [ -f "$TMPDIR/bw-$BITRATE.$MYPID.failfile" ]
 		      then
-                        echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.failfile`"
-                        rm -f "$TMPDIR/bw-$BITRATE.failfile"
+                        echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.$MYPID.failfile`"
+                        rm -f "$TMPDIR/bw-$BITRATE.$MYPID.failfile"
                         exit 1
 		      fi
 	      fi
@@ -611,11 +612,11 @@ else
 
   # Processing Starts
 
-  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE" "$TMPDIR/bw-$BITRATE.failfile"
-  if [ -f "$TMPDIR/bw-$BITRATE.failfile" ]
+  createStream "$PLAYLIST_NAME" "$OUT_NAME" "$BITRATE" "$INPUTFILE" "$TMPDIR/bw-$BITRATE.$MYPID.failfile"
+  if [ -f "$TMPDIR/bw-$BITRATE.$MYPID.failfile" ]
   then
-    echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.failfile`"
-    rm -f "$TMPDIR/bw-$BITRATE.failfile"
+    echo "Error: FFMPEG exited with status code `cat $TMPDIR/bw-$BITRATE.$MYPID.failfile`"
+    rm -f "$TMPDIR/bw-$BITRATE.$MYPID.failfile"
     exit 1
   fi  
 

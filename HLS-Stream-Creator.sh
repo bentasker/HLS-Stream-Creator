@@ -322,7 +322,7 @@ function encrypt(){
     for manifest in ${OUTPUT_DIRECTORY}/*.m3u8
     do
         # Insert the KEY at the 5'th line in the m3u8 file
-        $SED -i "5i #EXT-X-KEY:METHOD=AES-128,URI="${KEY_PREFIX}${KEY_NAME}.key "$manifest"
+        $SED -i "5i #EXT-X-KEY:METHOD=AES-128,URI=\"${KEY_PREFIX}${KEY_NAME}.key\"" "$manifest"
     done
 }
 

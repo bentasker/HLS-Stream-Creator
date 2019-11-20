@@ -37,6 +37,10 @@
 # 
 ######################################################################################
 
+# Introduced in HLS-36 to allow tracking of issues
+HLS_SC_VERSION="1.0"
+
+
 # Basic config
 OUTPUT_DIRECTORY=${OUTPUT_DIRECTORY:-'./output'}
 
